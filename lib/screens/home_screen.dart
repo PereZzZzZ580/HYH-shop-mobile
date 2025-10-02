@@ -12,28 +12,28 @@ class HomeScreen extends StatelessWidget {
       name: 'Cera Moldeadora',
       description: 'Cera para peinar con acabado mate.',
       price: 35000,
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/barba_Sola.jpeg',
+      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/cera-moldeadora.jpg',
     ),
     Product(
       id: '2',
       name: 'Aceite para Barba',
       description: 'Aceite hidratante para barba con aroma a sándalo.',
       price: 45000,
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/barba_corte.jpeg',
+      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/aceite-para-barba.jpg',
     ),
     Product(
       id: '3',
       name: 'Shampoo Fortalecedor',
       description: 'Shampoo para cabello y barba.',
       price: 40000,
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/cejas_holman.jpeg',
+      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/shampoo-fortalecedor.jpg',
     ),
     Product(
       id: '4',
       name: 'Tónico Capilar',
       description: 'Tónico para estimular el crecimiento del cabello.',
       price: 55000,
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/corteYbarba.png',
+      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/tonico-capilar.jpg',
     ),
   ];
 
@@ -44,6 +44,26 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: 100,
+                  height: 100,
+                  errorBuilder: (context, error, stackTrace) {
+                    // Fallback if logo is not available
+                    return Icon(
+                      Icons.store,
+                      size: 80,
+                      color: Theme.of(context).colorScheme.primary,
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
           SliverToBoxAdapter(
             child: _buildHeroSection(context),
           ),
@@ -89,7 +109,7 @@ class HomeScreen extends StatelessWidget {
       height: MediaQuery.of(context).size.height * 0.5,
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage('https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/barba_corte.jpeg'),
+          image: AssetImage('assets/images/hero_banner.jpg'),
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(Colors.black54, BlendMode.darken),
         ),
@@ -100,6 +120,24 @@ class HomeScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Logo image - replace with your actual logo
+              Container(
+                width: 120,
+                height: 120,
+                margin: const EdgeInsets.only(bottom: 16),
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    // Fallback if logo is not available
+                    return Icon(
+                      Icons.store,
+                      size: 80,
+                      color: Colors.white,
+                    );
+                  },
+                ),
+              ),
               Text(
                 'Estilo y Cuidado Profesional',
                 style: textTheme.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),

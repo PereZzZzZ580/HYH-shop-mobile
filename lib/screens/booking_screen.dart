@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -71,16 +72,75 @@ class _BookingScreenState extends State<BookingScreen> {
         '${address.isNotEmpty ? ' en $address' : ''}.'
         '${notes.isNotEmpty ? ' Notas: $notes' : ''}';
 
+    // Try different URL formats for WhatsApp
     final url = 'https://wa.me/573138907119?text=${Uri.encodeComponent(text)}';
+    final alternativeUrl = 'whatsapp://send?phone=573138907119&text=${Uri.encodeComponent(text)}';
 
+    // First try the web version
     if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } else {
-      // Handle error
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se pudo abrir WhatsApp.')),
-      );
+      launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } 
+    // If that fails, try the app version
+    else if (await canLaunchUrl(Uri.parse(alternativeUrl))) {
+      launchUrl(Uri.parse(alternativeUrl), mode: LaunchMode.externalApplication);
+    } 
+    // If both fail, show error
+    else {
+      // Check if WhatsApp is installed
+      final whatsappInstalled = await canLaunchUrl(Uri.parse('whatsapp://'));
+      if (!whatsappInstalled) {
+        // WhatsApp is not installed - schedule dialog after build
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          showWhatsAppNotInstalledDialog(context);
+        });
+      } else {
+        // WhatsApp is installed but still can't open
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No se pudo abrir WhatsApp. Intente manualmente.'),
+            ),
+          );
+        });
+      }
     }
+  }
+
+  void showWhatsAppNotInstalledDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('WhatsApp no instalado'),
+        content: const Text('Parece que WhatsApp no está instalado en tu dispositivo. ¿Deseas descargarlo?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('CANCELAR'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final appStoreUrl = Platform.isIOS 
+                ? 'itms-apps://itunes.apple.com/app/id310633997' 
+                : 'market://details?id=com.whatsapp';
+              
+              final url = Platform.isIOS 
+                ? 'https://apps.apple.com/app/whatsapp-messenger/id310633997' 
+                : 'https://play.google.com/store/apps/details?id=com.whatsapp';
+              
+              if (await canLaunchUrl(Uri.parse(appStoreUrl))) {
+                launchUrl(Uri.parse(appStoreUrl), mode: LaunchMode.externalApplication);
+              } else {
+                launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+              }
+              Navigator.of(context).pop();
+            },
+            child: const Text('IR A LA TIENDA'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

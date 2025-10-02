@@ -1,14 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'providers/cart_provider.dart';
+import 'providers/auth_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/appointments_screen.dart';
 import 'screens/services_screen.dart';
 import 'screens/barbers_screen.dart';
 import 'screens/contact_screen.dart';
+import 'screens/cart_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => CartProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => AuthProvider(),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -29,6 +47,11 @@ class MyApp extends StatelessWidget {
         Locale('es', 'ES'),
       ],
       home: const MainNavigator(),
+      routes: {
+        '/cart': (context) => const CartScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/register': (context) => const RegisterScreen(),
+      },
     );
   }
 }
@@ -134,7 +157,7 @@ class MainNavigator extends StatefulWidget {
 class _MainNavigatorState extends State<MainNavigator> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _screens = <Widget>[
+  final List<Widget> _screens = <Widget>[
     HomeScreen(),
     AppointmentsScreen(),
     ServicesScreen(),
@@ -159,12 +182,111 @@ class _MainNavigatorState extends State<MainNavigator> {
 
   @override
   Widget build(BuildContext context) {
+    final cart = Provider.of<CartProvider>(context);
+    final auth = Provider.of<AuthProvider>(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titles[_selectedIndex]),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // HYH Logo
+            Image.asset(
+              'assets/images/logo.png',
+              width: 40,
+              height: 40,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback if logo is not available
+                return Icon(
+                  Icons.store,
+                  color: Theme.of(context).colorScheme.primary,
+                );
+              },
+            ),
+            const SizedBox(width: 8),
+            Text(_titles[_selectedIndex]),
+          ],
+        ),
+        actions: [
+          if (_selectedIndex == 0) // Only show cart icon on Home screen
+            IconButton(
+              icon: Stack(
+                children: [
+                  const Icon(Icons.shopping_cart),
+                  if (cart.itemCount > 0)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '${cart.itemCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CartScreen()),
+                );
+              },
+              tooltip: 'Ver Carrito',
+            ),
+          // User profile icon - shows login/register if not logged in, user avatar if logged in
+          if (auth.isAuth)
+            PopupMenuButton(
+              icon: const Icon(Icons.person),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'profile',
+                  child: Text('Perfil'),
+                ),
+                PopupMenuItem(
+                  value: 'orders',
+                  child: Text('Mis Pedidos'),
+                ),
+                PopupMenuItem(
+                  value: 'logout',
+                  child: Text('Cerrar Sesión'),
+                ),
+              ],
+              onSelected: (value) {
+                if (value == 'logout') {
+                  auth.logout();
+                }
+                // TODO: Handle other menu options
+              },
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.person),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
+              },
+              tooltip: 'Iniciar Sesión',
+            ),
+        ],
       ),
       body: Center(
-        child: _screens.elementAt(_selectedIndex),
+        child: _screens[_selectedIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[

@@ -10,31 +10,31 @@ class ServicesScreen extends StatelessWidget {
       name: 'Corte de Cabello',
       price: 25000,
       duration: '45 min',
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/soloCorte.png',
+      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/corte-cabello.jpg',
     ),
     Service(
       name: 'Afeitado Clásico',
       price: 30000,
       duration: '60 min',
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/barba_corte.jpeg',
+      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/afeitado-clasico.jpg',
     ),
     Service(
       name: 'Arreglo de Barba',
       price: 15000,
       duration: '25 min',
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/barba_Sola.jpeg',
+      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/arreglo-barba.jpg',
     ),
     Service(
       name: 'Corte y Barba',
       price: 35000,
       duration: '75 min',
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/corteYbarba.png',
+      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/corte-y-barba.jpg',
     ),
     Service(
       name: 'Cejas',
       price: 5000,
       duration: '10 min',
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/cejas_holman.jpeg',
+      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/cejas.jpg',
     ),
   ];
 
