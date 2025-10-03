@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/cart_provider.dart';
 import '../models/cart_item.dart';
+import 'checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -226,11 +227,9 @@ class CartScreen extends StatelessWidget {
               onPressed: cart.items.isEmpty
                   ? null
                   : () {
-                      // TODO: Implement checkout process
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Funcionalidad de checkout en desarrollo'),
-                        ),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CheckoutScreen()),
                       );
                     },
               style: ElevatedButton.styleFrom(

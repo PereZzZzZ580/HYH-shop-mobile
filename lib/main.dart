@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/auth_provider.dart';
+import 'providers/order_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/appointments_screen.dart';
 import 'screens/services_screen.dart';
@@ -12,6 +13,7 @@ import 'screens/contact_screen.dart';
 import 'screens/cart_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
+import 'screens/order_history_screen.dart';
 
 void main() {
   runApp(
@@ -22,6 +24,9 @@ void main() {
         ),
         ChangeNotifierProvider(
           create: (context) => AuthProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => OrderProvider(),
         ),
       ],
       child: const MyApp(),
@@ -268,6 +273,11 @@ class _MainNavigatorState extends State<MainNavigator> {
               onSelected: (value) {
                 if (value == 'logout') {
                   auth.logout();
+                } else if (value == 'orders') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const OrderHistoryScreen()),
+                  );
                 }
                 // TODO: Handle other menu options
               },

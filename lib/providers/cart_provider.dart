@@ -74,4 +74,16 @@ class CartProvider with ChangeNotifier {
     _items.clear();
     notifyListeners();
   }
+  
+  // Load cart from backend for logged in user
+  Future<void> loadCartFromBackend() async {
+    // This would load the user's cart from the backend
+    // Implementation depends on authentication and backend API
+  }
+  
+  // Save cart to backend for logged in user
+  Future<void> saveCartToBackend() async {
+    // This would sync the user's cart to the backend
+    // Implementation depends on authentication and backend API
+  }
 }
