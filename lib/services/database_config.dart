@@ -3,8 +3,8 @@ import 'environment.dart';
 class DatabaseConfig {
   // Configuración para la conexión a la base de datos
   // Este valor vendrá del archivo .env o de la configuración del sistema
-  static const String apiUrl = Environment.apiUrl;
-  static const String apiKey = Environment.apiKey;
+  static String get apiUrl => Environment.apiUrl;
+  static String get apiKey => Environment.apiKey;
   
   // Headers comunes para todas las peticiones
   static Map<String, String> get headers {

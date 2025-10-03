@@ -14,8 +14,12 @@ import 'screens/cart_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/order_history_screen.dart';
+import 'services/environment.dart';
 
-void main() {
+void main() async {
+  // Initialize environment variables
+  await Environment.initialize();
+  
   runApp(
     MultiProvider(
       providers: [

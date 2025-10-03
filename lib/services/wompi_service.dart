@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'environment.dart';
 
 class WompiService {
-  static const String _baseUrl = Environment.wompiBaseUrl; // Using environment variable
-  static const String _privateKey = Environment.wompiPrivateKey; // Using environment variable
+  static String get _baseUrl => Environment.wompiBaseUrl; // Using environment variable
+  static String get _privateKey => Environment.wompiPrivateKey; // Using environment variable
 
   static Future<String?> createPayment({
     required double amount,
@@ -17,9 +17,16 @@ class WompiService {
     try {
       final dio = Dio();
       
-      // Headers - Wompi uses the public key for authentication in some cases
+      // Headers - Wompi uses the private key for authentication
       dio.options.headers['Authorization'] = 'Bearer $_privateKey';
       dio.options.headers['Content-Type'] = 'application/json';
+      
+      // Format phone number for Wompi API (must be in international format)
+      String formattedPhone = customerPhone ?? '+573001234567';
+      if (customerPhone != null) {
+        // Ensure phone number is in international format (e.g. +573001234567)
+        formattedPhone = customerPhone.startsWith('+') ? customerPhone : '+57${customerPhone.replaceAll(RegExp(r'[^\d]'), '').substring(customerPhone.length > 10 ? customerPhone.length - 10 : 0)}';
+      }
       
       // Create the payment intent/transaction
       final response = await dio.post(
@@ -27,22 +34,24 @@ class WompiService {
         data: {
           'amount_in_cents': (amount * 100).round(), // Convert to cents
           'currency': currency,
+          'reference': 'ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(4)}', // Unique reference with max 255 chars
           'customer': {
-            'customer_id': customerId,
-            'email': customerEmail,
             'name': customerName,
-            'phone_number': customerPhone ?? '',
+            'email': customerEmail,
+            'phone_number': formattedPhone, // Required format
           },
-          'shipping_address': customerAddress != null 
+          'shipping_address': customerAddress != null && customerAddress.isNotEmpty
             ? {
-                'address': customerAddress,
+                'address_line_1': customerAddress.length >= 4 ? customerAddress : 'Carrera 12 #15-34', // At least 4 chars required
                 'city': 'Medellín', // Should be obtained from user
                 'country': 'CO',
                 'full_name': customerName,
+                'phone_number': formattedPhone, // Same phone number
+                'region': 'ANT', // Required - using Antioquia as example
               } 
             : null,
-          'payment_source': {
-            'type': 'ON_PAGE',
+          'payment_method': {
+            'type': 'ON_PAGE_REDIRECT',
           },
         },
       );
@@ -51,26 +60,33 @@ class WompiService {
         final data = response.data;
         final transaction = data['data'];
         
+        print('Wompi transaction response: $transaction'); // For debugging
+        
         // Different Wompi response formats might exist
         // Check for redirect URL or payment link
-        if (transaction['redirect_url'] != null) {
-          return transaction['redirect_url'];
-        } else if (transaction['checkout_url'] != null) {
+        if (transaction['checkout_url'] != null) {
           return transaction['checkout_url'];
+        } else if (transaction['redirect_url'] != null) {
+          return transaction['redirect_url'];
+        } else if (transaction['secure_payment_url'] != null) {
+          return transaction['secure_payment_url'];
         } else if (transaction['id'] != null) {
           // Create a payment page URL based on the transaction ID
-          // This is a fallback approach
-          return 'https://checkout.wompi.co/l/${transaction['id']}';
+          // This is a fallback approach for sandbox environment
+          String wompiEnv = Environment.wompiBaseUrl.contains('production') ? 'production' : 'sandbox';
+          String domain = 'checkout.wompi.co'; // Both sandbox and production use the same checkout domain
+          return 'https://$domain/l/${transaction['id']}';
         }
       }
       
       return null;
     } catch (e) {
       // Log error in development, but handle gracefully in production
-      // print('Error creating Wompi payment: $e');
+      print('Error creating Wompi payment: $e');
       // Capture DioError details if needed
       if (e is DioException) {
-        // print('DioError: ${e.response?.data}');
+        print('DioError details: ${e.response?.data}');
+        print('DioError status code: ${e.response?.statusCode}');
       }
       return null;
     }

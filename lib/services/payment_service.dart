@@ -31,24 +31,29 @@ class PaymentService {
   }) async {
     switch (paymentMethod) {
       case 'Wompi':
-        String? paymentUrl = await WompiService.createPayment(
-          amount: amount,
-          customerId: customerId,
-          customerEmail: customerEmail,
-          customerName: customerName,
-          customerPhone: customerPhone,
-          customerAddress: customerAddress,
-          currency: 'COP', // Colombian Peso
-        );
-        
-        if (paymentUrl != null) {
-          // Launch the Wompi payment page
-          await _launchURL(paymentUrl);
-          // Return true to indicate that the payment process has started
-          // The actual payment verification would happen in a separate process
-          return true;
+        try {
+          String? paymentUrl = await WompiService.createPayment(
+            amount: amount,
+            customerId: customerId,
+            customerEmail: customerEmail,
+            customerName: customerName,
+            customerPhone: customerPhone,
+            customerAddress: customerAddress,
+            currency: 'COP', // Colombian Peso
+          );
+          
+          if (paymentUrl != null) {
+            // Launch the Wompi payment page
+            await _launchURL(paymentUrl);
+            // Return true to indicate that the payment process has started
+            // The actual payment verification would happen in a separate process
+            return true;
+          }
+          return false;
+        } catch (e) {
+          // Rethrow the exception to be handled by the UI layer
+          rethrow;
         }
-        return false;
         
       case 'WhatsApp':
         // For WhatsApp, we can send a message with order details
@@ -83,7 +88,7 @@ class PaymentService {
   static Future<void> _launchURL(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
       throw 'Could not launch $url';
     }

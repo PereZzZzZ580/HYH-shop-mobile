@@ -85,7 +85,15 @@ class OrderProvider with ChangeNotifier {
         notifyListeners();
       }
     } on DioException catch (e) {
-      throw Exception('Error saving order to backend: ${e.message}');
+      // Don't throw exception if backend API is unavailable, just log the error
+      // This allows the app to continue working even if the backend is down
+      print('Backend API error: ${e.message}');
+      print('Status: ${e.response?.statusCode}');
+      print('Data: ${e.response?.data}');
+      
+      // Still add the order to local list so the user has record of it
+      _orders.insert(0, order);
+      notifyListeners();
     }
   }
   

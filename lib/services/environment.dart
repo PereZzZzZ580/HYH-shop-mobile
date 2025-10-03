@@ -1,18 +1,29 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class Environment {
+  static Future<void> initialize() async {
+    await dotenv.load(fileName: ".env");
+  }
+
   // API configuration
-  static const String apiUrl = String.fromEnvironment('API_URL', defaultValue: 'https://api.hyhshop.com');
-  static const String apiKey = String.fromEnvironment('API_KEY', defaultValue: '');
+  static String get apiUrl => dotenv.env['API_URL'] ?? 'https://api.hyhshop.com';
+  static String get apiKey => dotenv.env['API_KEY'] ?? '';
   
   // Wompi configuration
-  static const String wompiPublicKey = String.fromEnvironment('WOMPI_PUBLIC_KEY', defaultValue: 'pub_test_xxxxxxxxxx');
-  static const String wompiPrivateKey = String.fromEnvironment('WOMPI_PRIVATE_KEY', defaultValue: 'prv_test_xxxxxxxxxx');
-  static const String wompiBaseUrl = String.fromEnvironment('WOMPI_BASE_URL', defaultValue: 'https://sandbox.wompi.co/v1');
+  static String get wompiPublicKey => dotenv.env['WOMPI_PUBLIC_KEY'] ?? 'pub_test_xxxxxxxxxx';
+  static String get wompiPrivateKey => dotenv.env['WOMPI_PRIVATE_KEY'] ?? 'prv_test_xxxxxxxxxx';
+  static String get wompiBaseUrl {
+    String env = dotenv.env['WOMPI_ENV'] ?? 'sandbox';
+    return env == 'production' 
+        ? 'https://production.wompi.co/v1' 
+        : 'https://sandbox.wompi.co/v1';
+  }
   
   // Environment type
-  static const String environment = String.fromEnvironment('ENV', defaultValue: 'production');
+  static String get environment => dotenv.env['ENV'] ?? 'production';
   static bool get isDebug => environment == 'debug';
   static bool get isProduction => environment == 'production';
   
   // App configuration
-  static const String appName = String.fromEnvironment('APP_NAME', defaultValue: 'HyH Shop Barbería');
+  static String get appName => dotenv.env['APP_NAME'] ?? 'HyH Shop Barbería';
 }

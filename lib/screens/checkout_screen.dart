@@ -635,7 +635,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error al procesar el pedido: $e'),
+            content: Text('Error al procesar el pedido: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
