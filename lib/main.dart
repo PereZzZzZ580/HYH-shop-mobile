@@ -17,6 +17,8 @@ import 'screens/order_history_screen.dart';
 import 'services/environment.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   // Initialize environment variables
   await Environment.initialize();
   
