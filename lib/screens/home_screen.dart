@@ -1,104 +1,166 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
+import '../services/product_service.dart';
 import '../widgets/product_card.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-  // Placeholder product data
-  final List<Product> products = const [
-    Product(
-      id: '1',
-      name: 'Cera Moldeadora',
-      description: 'Cera para peinar con acabado mate.',
-      price: 35000,
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/cera-moldeadora.jpg',
-    ),
-    Product(
-      id: '2',
-      name: 'Aceite para Barba',
-      description: 'Aceite hidratante para barba con aroma a sándalo.',
-      price: 45000,
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/aceite-para-barba.jpg',
-    ),
-    Product(
-      id: '3',
-      name: 'Shampoo Fortalecedor',
-      description: 'Shampoo para cabello y barba.',
-      price: 40000,
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/shampoo-fortalecedor.jpg',
-    ),
-    Product(
-      id: '4',
-      name: 'Tónico Capilar',
-      description: 'Tónico para estimular el crecimiento del cabello.',
-      price: 55000,
-      imageUrl: 'https://raw.githubusercontent.com/PereZzZzZ580/hyh-shop/main/public/tonico-capilar.jpg',
-    ),
-  ];
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late Future<List<Product>> _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _productsFuture = ProductService.fetchProducts(perPage: 30);
+  }
+
+  Future<void> _reloadProducts() async {
+    try {
+      final products = await ProductService.fetchProducts(perPage: 30);
+      if (!mounted) return;
+      setState(() {
+        _productsFuture = Future.value(products);
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _productsFuture = Future.error(error);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Container(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  width: 100,
-                  height: 100,
-                  errorBuilder: (context, error, stackTrace) {
-                    // Fallback if logo is not available
-                    return Icon(
-                      Icons.store,
-                      size: 80,
-                      color: Theme.of(context).colorScheme.primary,
-                    );
-                  },
+      body: FutureBuilder<List<Product>>(
+        future: _productsFuture,
+        builder: (context, snapshot) {
+          final isLoading = snapshot.connectionState == ConnectionState.waiting;
+          final products = snapshot.data ?? const <Product>[];
+          final hasError = snapshot.hasError;
+
+          return RefreshIndicator(
+            onRefresh: _reloadProducts,
+            displacement: 72,
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Center(
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        width: 100,
+                        height: 100,
+                        errorBuilder: (context, error, stack) => Icon(
+                          Icons.store,
+                          size: 80,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                SliverToBoxAdapter(child: _buildHeroSection(context)),
+                SliverToBoxAdapter(child: _buildAboutBlock(context)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Nuestros Productos',
+                          style: textTheme.headlineSmall,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Catalogo sincronizado con hyh-shop.com',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (isLoading)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  )
+                else if (hasError)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, size: 48, color: Colors.amber),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No pudimos conectar con el catalogo.',
+                            style: textTheme.titleMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Revisa tu conexion o desliza hacia abajo para reintentar.',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else if (products.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.inventory_2_outlined, size: 48),
+                          const SizedBox(height: 12),
+                          Text(
+                            'No hay productos disponibles en este momento.',
+                            style: textTheme.titleMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverGrid.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 0.7,
+                      ),
+                      itemCount: products.length,
+                      itemBuilder: (context, index) => ProductCard(product: products[index]),
+                    ),
+                  ),
+                SliverToBoxAdapter(child: _buildWhyChooseUsSection(context)),
+              ],
             ),
-          ),
-          SliverToBoxAdapter(
-            child: _buildHeroSection(context),
-          ),
-          SliverToBoxAdapter(
-            child: _buildAboutBlock(context),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
-              child: Text(
-                'Nuestros Productos',
-                style: textTheme.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            sliver: SliverGrid.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.7, // Adjust aspect ratio for better layout
-              ),
-              itemCount: products.length,
-              itemBuilder: (context, index) {
-                return ProductCard(product: products[index]);
-              },
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: _buildWhyChooseUsSection(context),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -106,7 +168,7 @@ class HomeScreen extends StatelessWidget {
   Widget _buildHeroSection(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Container(
-      height: MediaQuery.of(context).size.height * 0.5,
+      constraints: const BoxConstraints(minHeight: 320),
       decoration: const BoxDecoration(
         image: DecorationImage(
           image: AssetImage('assets/images/hero_banner.jpg'),
@@ -116,11 +178,11 @@ class HomeScreen extends StatelessWidget {
       ),
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.all(24),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo image - replace with your actual logo
               Container(
                 width: 120,
                 height: 120,
@@ -128,19 +190,19 @@ class HomeScreen extends StatelessWidget {
                 child: Image.asset(
                   'assets/images/logo.png',
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    // Fallback if logo is not available
-                    return Icon(
-                      Icons.store,
-                      size: 80,
-                      color: Colors.white,
-                    );
-                  },
+                  errorBuilder: (context, error, stack) => const Icon(
+                    Icons.store,
+                    size: 80,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               Text(
-                'Estilo y Cuidado Profesional',
-                style: textTheme.displaySmall?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                'Estilo y cuidado profesional',
+                style: textTheme.displaySmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -161,11 +223,12 @@ class HomeScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Sobre Nosotros', style: textTheme.headlineSmall),
+          Text('Sobre nosotros', style: textTheme.headlineSmall),
           const SizedBox(height: 16),
           Text(
-            'En HyH Shop, nos dedicamos a ofrecerte la mejor experiencia en cuidado personal masculino. Seleccionamos cuidadosamente cada producto para asegurar la máxima calidad y resultados excepcionales.',
+            'En HyH Shop seleccionamos cada producto para asegurar la mejor experiencia en barberia y cuidado personal masculino.',
             style: textTheme.bodyLarge,
             textAlign: TextAlign.center,
           ),
@@ -180,14 +243,15 @@ class HomeScreen extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
       color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text('¿Por Qué Elegirnos?', style: textTheme.headlineSmall, textAlign: TextAlign.center),
+          Text('Por que elegirnos?', style: textTheme.headlineSmall, textAlign: TextAlign.center),
           const SizedBox(height: 32),
-          _buildFeatureItem(context, Icons.workspace_premium, 'Calidad Premium', 'Materiales seleccionados y montaje preciso.'),
+          _buildFeatureItem(context, Icons.workspace_premium, 'Calidad premium', 'Materiales seleccionados y montaje preciso.'),
           const SizedBox(height: 24),
-          _buildFeatureItem(context, Icons.star, 'Ediciones Limitadas', 'Piezas con disponibilidad controlada.'),
+          _buildFeatureItem(context, Icons.star, 'Ediciones limitadas', 'Piezas con disponibilidad controlada.'),
           const SizedBox(height: 24),
-          _buildFeatureItem(context, Icons.shield_outlined, 'Garantía Real', 'Soporte humano y cambios sin drama.'),
+          _buildFeatureItem(context, Icons.shield_outlined, 'Garantía real', 'Soporte humano y cambios sin drama.'),
         ],
       ),
     );

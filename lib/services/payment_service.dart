@@ -9,8 +9,8 @@ class PaymentService {
     'WhatsApp',
     'Wompi',
     'Efectivo',
-    'Tarjeta de Débito',
-    'Tarjeta de Crédito',
+    'Tarjeta de Debito',
+    'Tarjeta de Credito',
     'Transferencia Bancaria',
     'PayPal',
   ];
@@ -57,13 +57,13 @@ class PaymentService {
         
       case 'WhatsApp':
         // For WhatsApp, we can send a message with order details
-        String message = "Hola, quiero confirmar mi pedido en HyH Shop Barbería.%0A"
+        String message = "Hola, quiero confirmar mi pedido en HyH Shop Barberia.%0A"
             "Cliente: ${customerName}%0A"
             "Email: ${customerEmail}%0A"
-            "Teléfono: ${customerPhone ?? ''}%0A"
-            "Dirección: ${customerAddress ?? ''}%0A"
+            "Telefono: ${customerPhone ?? ''}%0A"
+            "Direccion: ${customerAddress ?? ''}%0A"
             "Total: %24${amount.toStringAsFixed(0)}%0A"
-            "Por favor, indíquenme cómo completar el pago.";
+            "Por favor, indiquenme como completar el pago.";
         String whatsAppUrl = "https://wa.me/?text=$message";
         await _launchURL(whatsAppUrl);
         return true;
@@ -72,8 +72,8 @@ class PaymentService {
         // For contra entrega, the order is confirmed but payment happens on delivery
         return true;
         
-      case 'Tarjeta de Débito':
-      case 'Tarjeta de Crédito':
+      case 'Tarjeta de Debito':
+      case 'Tarjeta de Credito':
         // For demo purposes, simulate card payment processing
         await Future.delayed(const Duration(seconds: 2));
         return true;

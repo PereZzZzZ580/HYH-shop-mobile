@@ -8,6 +8,8 @@ import 'checkout_screen.dart';
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
+  static const routeName = '/cart';
+
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartProvider>(context);
@@ -86,6 +88,8 @@ class CartScreen extends StatelessWidget {
     TextTheme textTheme,
     ColorScheme colorScheme,
   ) {
+    final itemKey = cartItem.variant?.id ?? cartItem.product.id;
+    final unitPrice = cartItem.variant?.price ?? cartItem.product.price;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       shape: RoundedRectangleBorder(
@@ -127,7 +131,7 @@ class CartScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '\$${cartItem.product.price.toStringAsFixed(0)}',
+                    '\$${unitPrice.toStringAsFixed(0)}',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       color: colorScheme.primary,
@@ -148,7 +152,7 @@ class CartScreen extends StatelessWidget {
                       _QuantitySelector(
                         quantity: cartItem.quantity,
                         onQuantityChanged: (newQuantity) {
-                          cart.updateQuantity(cartItem.product.id, newQuantity);
+                          cart.updateQuantity(itemKey, newQuantity);
                         },
                       ),
                     ],
@@ -171,7 +175,7 @@ class CartScreen extends StatelessWidget {
                 IconButton(
                   icon: Icon(Icons.delete, color: Colors.red),
                   onPressed: () {
-                    cart.removeItem(cartItem.product.id);
+                    cart.removeItem(itemKey);
                   },
                   tooltip: 'Eliminar del carrito',
                 ),

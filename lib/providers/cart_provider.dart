@@ -22,46 +22,64 @@ class CartProvider with ChangeNotifier {
   }
 
   bool isInCart(Product product) {
-    return _items.any((cartItem) => cartItem.product.id == product.id);
+    final targetVariantId = product.primaryVariant?.id;
+    return _items.any((cartItem) {
+      final itemVariantId = cartItem.variant?.id;
+      if (targetVariantId != null && itemVariantId != null) {
+        return itemVariantId == targetVariantId;
+      }
+      return cartItem.product.id == product.id;
+    });
   }
 
   CartItem? getCartItem(Product product) {
     try {
-      return _items.firstWhere(
-        (cartItem) => cartItem.product.id == product.id,
-      );
+      final targetVariantId = product.primaryVariant?.id;
+      return _items.firstWhere((cartItem) {
+        final itemVariantId = cartItem.variant?.id;
+        if (targetVariantId != null && itemVariantId != null) {
+          return itemVariantId == targetVariantId;
+        }
+        return cartItem.product.id == product.id;
+      });
     } catch (e) {
       return null;
     }
   }
 
   void addItem(Product product, {int quantity = 1}) {
-    final existingCartItemIndex = _items.indexWhere(
-      (cartItem) => cartItem.product.id == product.id,
-    );
+    final variant = product.primaryVariant;
+    final targetId = variant?.id ?? product.id;
+    final existingCartItemIndex = _items.indexWhere((cartItem) {
+      final itemId = cartItem.variant?.id ?? cartItem.product.id;
+      return itemId == targetId;
+    });
 
     if (existingCartItemIndex >= 0) {
       _items[existingCartItemIndex].quantity += quantity;
     } else {
       _items.add(CartItem(
         product: product,
+        variant: variant,
         quantity: quantity,
       ));
     }
     notifyListeners();
   }
 
-  void removeItem(String productId) {
-    _items.removeWhere((cartItem) => cartItem.product.id == productId);
+  void removeItem(String productKey) {
+    _items.removeWhere(
+      (cartItem) => (cartItem.variant?.id ?? cartItem.product.id) == productKey,
+    );
     notifyListeners();
   }
 
-  void updateQuantity(String productId, int newQuantity) {
+  void updateQuantity(String productKey, int newQuantity) {
     if (newQuantity <= 0) {
-      removeItem(productId);
+      removeItem(productKey);
     } else {
       final existingCartItemIndex = _items.indexWhere(
-        (cartItem) => cartItem.product.id == productId,
+        (cartItem) => (cartItem.variant?.id ?? cartItem.product.id) == productKey,
       );
       if (existingCartItemIndex >= 0) {
         _items[existingCartItemIndex].quantity = newQuantity;
